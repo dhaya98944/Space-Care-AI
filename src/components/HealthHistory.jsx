@@ -14,6 +14,8 @@ import {
   History,
   HeartPulse,
   Activity,
+  Wind,
+  Moon,
   Clock,
   RefreshCw
 } from "lucide-react";
@@ -24,6 +26,31 @@ export default function HealthHistory({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const fetchRecords = async () => {
+
+    if (!db || !user) return [];
+
+    const historyRef = collection(
+      db,
+      "astronauts",
+      user.uid,
+      "assessments"
+    );
+
+    const historyQuery = query(
+      historyRef,
+      orderBy("recordedAt", "desc")
+    );
+
+    const snapshot = await getDocs(historyQuery);
+
+    return snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
+
+  };
+
   const loadHistory = async () => {
 
     if (!db || !user) return;
@@ -33,26 +60,7 @@ export default function HealthHistory({ user }) {
 
     try {
 
-      const historyRef = collection(
-        db,
-        "astronauts",
-        user.uid,
-        "assessments"
-      );
-
-      const historyQuery = query(
-        historyRef,
-        orderBy("recordedAt", "desc")
-      );
-
-      const snapshot = await getDocs(historyQuery);
-
-      setRecords(
-        snapshot.docs.map((item) => ({
-          id: item.id,
-          ...item.data()
-        }))
-      );
+      setRecords(await fetchRecords());
 
     } catch (err) {
 
@@ -68,7 +76,47 @@ export default function HealthHistory({ user }) {
   };
 
   useEffect(() => {
-    //loadHistory();
+
+    let cancelled = false;
+
+    const start = async () => {
+
+      if (!db || !user) return;
+
+      try {
+
+        const nextRecords = await fetchRecords();
+
+        if (!cancelled) {
+          setRecords(nextRecords);
+          setError("");
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+        if (!cancelled) {
+          setError("Unable to retrieve assessment history.");
+        }
+
+      } finally {
+
+        if (!cancelled) {
+          setLoading(false);
+        }
+
+      }
+
+    };
+
+    start();
+
+    return () => {
+      cancelled = true;
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const formatDate = (date) => {
@@ -76,6 +124,18 @@ export default function HealthHistory({ user }) {
     if (!date) return "Date unavailable";
 
     return new Date(date).toLocaleString();
+
+  };
+
+  const formatShortDate = (date) => {
+
+    if (!date) return "—";
+
+    return new Date(date).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
 
   };
 
@@ -116,6 +176,14 @@ export default function HealthHistory({ user }) {
           <div>
             <strong>{records.length}</strong>
             <span>Total Assessments</span>
+          </div>
+        </div>
+
+        <div className="history-summary-card teal">
+          <Clock size={23} />
+          <div>
+            <strong>{formatShortDate(records[0]?.recordedAt)}</strong>
+            <span>Latest Assessment</span>
           </div>
         </div>
 
@@ -188,13 +256,13 @@ export default function HealthHistory({ user }) {
               </div>
 
               <div>
-                <Activity size={17} />
+                <Wind size={17} />
                 <span>SpO₂</span>
                 <strong>{m.spo2 ?? "—"}%</strong>
               </div>
 
               <div>
-                <Clock size={17} />
+                <Moon size={17} />
                 <span>Sleep</span>
                 <strong>{m.sleepHours ?? "—"} Hours</strong>
               </div>
@@ -210,6 +278,23 @@ export default function HealthHistory({ user }) {
               <span>
                 Mood: {record.psychological?.mood || "—"}
               </span>
+
+              {record.urine && (
+                <span className="urine-chip">
+                  <i
+                    className="urine-chip-dot"
+                    style={{ backgroundColor: record.urine.hex }}
+                    aria-hidden="true"
+                  ></i>
+                  Urine: {record.urine.label} · {record.urine.colorScore}/8
+                </span>
+              )}
+
+              {record.urine?.hydrationEstimate && (
+                <span>
+                  Hydration: {record.urine.hydrationEstimate}
+                </span>
+              )}
 
               <span>
                 Symptoms: {

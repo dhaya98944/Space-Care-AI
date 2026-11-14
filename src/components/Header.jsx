@@ -1,6 +1,26 @@
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, LogOut } from "lucide-react";
 
-export default function Header({ astronaut, setMobileOpen }) {
+const pageMeta = {
+  Dashboard: {
+    title: "Mission Health Center",
+    subtitle: "Monitor your health during your space mission",
+  },
+  "Health Assessment": {
+    title: "Daily Health Assessment",
+    subtitle: "Record your physiological and wellness measurements",
+  },
+  "Health History": {
+    title: "Health Records",
+    subtitle: "Review your previous mission health assessments",
+  },
+};
+
+export default function Header({
+  astronaut,
+  activePage,
+  setMobileOpen,
+  onLogout,
+}) {
 
   const initials = (astronaut?.name || "Astronaut")
     .split(" ")
@@ -8,6 +28,11 @@ export default function Header({ astronaut, setMobileOpen }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const meta = pageMeta[activePage] || {
+    title: activePage || "Mission Health Center",
+    subtitle: "SPACECARE AI mission workspace",
+  };
 
   return (
 
@@ -17,14 +42,15 @@ export default function Header({ astronaut, setMobileOpen }) {
 
         <button
           className="mobile-menu"
+          aria-label="Open navigation"
           onClick={() => setMobileOpen?.(true)}
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
         <div>
-          <h2>Mission Health Center</h2>
-          <p>Monitor your health during your space mission</p>
+          <h2>{meta.title}</h2>
+          <p>{meta.subtitle}</p>
         </div>
 
       </div>
@@ -37,8 +63,19 @@ export default function Header({ astronaut, setMobileOpen }) {
         </div>
 
         <button className="header-icon" aria-label="Notifications">
-          <Bell size={19} />
+          <Bell size={18} />
         </button>
+
+        {onLogout && (
+          <button
+            className="logout-button"
+            onClick={onLogout}
+            title="Sign out of the mission workspace"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
+        )}
 
         <div className="user-profile">
 

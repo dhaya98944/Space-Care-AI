@@ -45,6 +45,7 @@ const initialForm = {
 
   nutrition: "Normal",
   hydration: "Adequate",
+  urineColor: "",
 
   symptoms: [],
   medications: "",
@@ -68,6 +69,91 @@ const symptomOptions = [
   "Vision changes",
   "None"
 ];
+
+/*
+ * Urine colour chart (1 = very dilute, 8 = highly concentrated).
+ * Used as a general wellness hydration indicator, not a diagnosis.
+ */
+const urineColorOptions = [
+  {
+    value: "clear",
+    label: "Clear",
+    hint: "Very hydrated",
+    hex: "#f2fafd",
+    score: 1,
+    estimate: "Well hydrated",
+    severity: "good"
+  },
+  {
+    value: "pale-straw",
+    label: "Pale straw",
+    hint: "Hydrated",
+    hex: "#f7f1cc",
+    score: 2,
+    estimate: "Well hydrated",
+    severity: "good"
+  },
+  {
+    value: "straw",
+    label: "Straw",
+    hint: "Hydrated",
+    hex: "#f2e6a4",
+    score: 3,
+    estimate: "Well hydrated",
+    severity: "good"
+  },
+  {
+    value: "light-yellow",
+    label: "Light yellow",
+    hint: "Adequate",
+    hex: "#ecd878",
+    score: 4,
+    estimate: "Adequate hydration",
+    severity: "good"
+  },
+  {
+    value: "yellow",
+    label: "Yellow",
+    hint: "Drink water",
+    hex: "#e2c247",
+    score: 5,
+    estimate: "Mild dehydration",
+    severity: "caution"
+  },
+  {
+    value: "dark-yellow",
+    label: "Dark yellow",
+    hint: "Dehydration",
+    hex: "#caa02b",
+    score: 6,
+    estimate: "Mild dehydration",
+    severity: "caution"
+  },
+  {
+    value: "amber",
+    label: "Amber",
+    hint: "High concentration",
+    hex: "#b47a19",
+    score: 7,
+    estimate: "Dehydration",
+    severity: "warning"
+  },
+  {
+    value: "brown",
+    label: "Brown",
+    hint: "Severe",
+    hex: "#8a5a14",
+    score: 8,
+    estimate: "Dehydration",
+    severity: "warning"
+  }
+];
+
+const hydrationStatusForScore = (score) => {
+  if (score <= 4) return "Adequate";
+  if (score <= 6) return "Reduced Intake";
+  return "Possible Dehydration";
+};
 
 function FormSection({ icon: Icon, title, description, children }) {
   return (
@@ -94,9 +180,9 @@ function FormSection({ icon: Icon, title, description, children }) {
   );
 }
 
-function Field({ label, unit, children }) {
+function Field({ label, unit, wide = false, children }) {
   return (
-    <div className="assessment-field">
+    <div className={`assessment-field ${wide ? "wide" : ""}`}>
 
       <label>{label}</label>
 
@@ -117,6 +203,20 @@ export default function HealthAssessment({ user, astronaut }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const selectedUrineColor = urineColorOptions.find(
+    (option) => option.value === form.urineColor
+  );
+
+  const selectUrineColor = (option) => {
+
+    setForm((previous) => ({
+      ...previous,
+      urineColor: option.value,
+      hydration: hydrationStatusForScore(option.score)
+    }));
+
+  };
 
   const update = (name, value) => {
 
@@ -291,6 +391,17 @@ export default function HealthAssessment({ user, astronaut }) {
           hydration: form.hydration
         },
 
+        urine: selectedUrineColor
+          ? {
+              color: selectedUrineColor.value,
+              label: selectedUrineColor.label,
+              hex: selectedUrineColor.hex,
+              colorScore: selectedUrineColor.score,
+              hydrationEstimate: selectedUrineColor.estimate,
+              method: "urine-color-chart"
+            }
+          : null,
+
         symptoms: form.symptoms,
 
         medications: form.medications.trim(),
@@ -309,7 +420,7 @@ export default function HealthAssessment({ user, astronaut }) {
 
         recordedAt: new Date().toISOString(),
 
-        schemaVersion: 1
+        schemaVersion: 2
 
       };
 
@@ -712,6 +823,67 @@ export default function HealthAssessment({ user, astronaut }) {
               <option>Reduced Intake</option>
               <option>Possible Dehydration</option>
             </select>
+
+          </Field>
+
+          <Field label="Urine Color (Hydration Indicator)" wide>
+
+            <div
+              className="urine-swatches"
+              role="radiogroup"
+              aria-label="Urine color"
+            >
+
+              {urineColorOptions.map((option) => {
+
+                const selected = form.urineColor === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={`urine-swatch ${selected ? "selected" : ""}`}
+                    onClick={() => selectUrineColor(option)}
+                  >
+                    <span
+                      className="urine-swatch-dot"
+                      style={{ backgroundColor: option.hex }}
+                      aria-hidden="true"
+                    ></span>
+
+                    <span className="urine-swatch-text">
+                      <strong>{option.label}</strong>
+                      <small>{option.hint}</small>
+                    </span>
+                  </button>
+                );
+              })}
+
+            </div>
+
+            {selectedUrineColor ? (
+              <div className={`hydration-estimate ${selectedUrineColor.severity}`}>
+                <span className="hydration-dot" aria-hidden="true"></span>
+                <div>
+                  <strong>
+                    Estimated hydration: {selectedUrineColor.estimate}
+                  </strong>
+                  <small>
+                    Based on colour {selectedUrineColor.score} of 8 ·
+                    Hydration status set to “{form.hydration}”. You can still
+                    adjust it above.
+                  </small>
+                </div>
+              </div>
+            ) : (
+              <small className="urine-hint">
+                Select the closest colour to estimate hydration from urine
+                concentration. Colour is a general wellness indicator, not a
+                medical diagnosis.
+              </small>
+            )}
 
           </Field>
 

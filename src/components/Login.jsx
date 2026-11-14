@@ -20,7 +20,12 @@ import {
   Lock,
   Mail,
   UserRound,
-  Rocket
+  Rocket,
+  Activity,
+  HeartPulse,
+  ShieldCheck,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 export default function Login() {
@@ -37,6 +42,7 @@ export default function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const update = (e) => {
     setForm({
@@ -141,150 +147,234 @@ export default function Login() {
 
       <div className="login-card">
 
-        <div className="login-brand">
+        <aside className="login-aside">
 
-          <div className="login-logo">
-            <Orbit size={35} />
-          </div>
+          <div className="login-intro">
 
-          <h1>SPACECARE AI</h1>
+            <div className="login-aside-brand">
 
-          <p>Astronaut Health Monitoring System</p>
-
-        </div>
-
-        <h2>
-          {mode === "login"
-            ? "Astronaut Login"
-            : "Astronaut Registration"}
-        </h2>
-
-        <p className="login-description">
-          Secure access to your mission health monitoring system.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-
-          {mode === "register" && (
-
-            <>
-              <label>Full Name</label>
-
-              <div className="login-input">
-                <UserRound size={17} />
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={update}
-                  placeholder="Enter full name"
-                  required
-                />
+              <div className="login-logo">
+                <Orbit size={30} />
               </div>
 
-              <label>Astronaut ID</label>
-
-              <div className="login-input">
-                <Rocket size={17} />
-                <input
-                  name="astronautId"
-                  value={form.astronautId}
-                  onChange={update}
-                  placeholder="AST-1001"
-                  required
-                />
+              <div>
+                <strong>SPACECARE AI</strong>
+                <span>ASTRONAUT HEALTH MONITORING</span>
               </div>
 
-              <label>Mission</label>
-
-              <select
-                name="mission"
-                value={form.mission}
-                onChange={update}
-                className="login-select"
-              >
-                <option value="ISS">ISS</option>
-                <option value="Artemis">Artemis</option>
-                <option value="Deep Space">Deep Space</option>
-              </select>
-            </>
-          )}
-
-          <label>Email Address</label>
-
-          <div className="login-input">
-            <Mail size={17} />
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={update}
-              placeholder="astronaut@example.com"
-              required
-            />
-          </div>
-
-          <label>Password</label>
-
-          <div className="login-input">
-            <Lock size={17} />
-
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={update}
-              placeholder="Enter password"
-              minLength={6}
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="login-error">
-              {error}
             </div>
-          )}
 
-          <button
-            className="primary-button login-submit"
-            type="submit"
-            disabled={loading}
-          >
-            {loading
-              ? "Please wait..."
-              : mode === "login"
-              ? "Login to Mission"
-              : "Register Astronaut"}
-          </button>
+            <h1>
+              Health intelligence for every <em>mission</em>.
+            </h1>
 
-        </form>
+            <p>
+              Track vital signs, sleep, activity and psychological
+              wellness from launch readiness to mission completion.
+            </p>
 
-        <div className="login-switch">
+          </div>
 
-          {mode === "login"
-            ? "New astronaut? "
-            : "Already registered? "}
+          <div className="login-features">
 
-          <button
-            type="button"
-            onClick={() => {
-              setMode(
-                mode === "login" ? "register" : "login"
-              );
-              setError("");
-            }}
-          >
+            <div className="login-feature">
+              <Activity size={18} />
+              <div>
+                <strong>Live vital monitoring</strong>
+                <span>Heart rate, blood pressure, SpO₂ and more</span>
+              </div>
+            </div>
+
+            <div className="login-feature">
+              <HeartPulse size={18} />
+              <div>
+                <strong>Daily health assessments</strong>
+                <span>Structured checks for physiological wellbeing</span>
+              </div>
+            </div>
+
+            <div className="login-feature">
+              <ShieldCheck size={18} />
+              <div>
+                <strong>Secure mission records</strong>
+                <span>Encrypted access to your health history</span>
+              </div>
+            </div>
+
+          </div>
+
+          <p className="login-aside-footer">
+            SPACECARE AI · Secure Mission Access
+          </p>
+
+        </aside>
+
+        <div className="login-panel">
+
+          <span className="eyebrow">
+            <ShieldCheck size={15} />
+            SECURE ACCESS
+          </span>
+
+          <h2>
             {mode === "login"
-              ? "Register here"
-              : "Login here"}
-          </button>
+              ? "Astronaut Login"
+              : "Astronaut Registration"}
+          </h2>
+
+          <p className="login-description">
+            {mode === "login"
+              ? "Sign in to access your mission health monitoring system."
+              : "Create your crew profile to begin health monitoring."}
+          </p>
+
+          <form onSubmit={handleSubmit}>
+
+            {mode === "register" && (
+
+              <>
+                <label htmlFor="name">Full Name</label>
+
+                <div className="login-input">
+                  <UserRound size={17} />
+                  <input
+                    id="name"
+                    name="name"
+                    value={form.name}
+                    onChange={update}
+                    placeholder="Enter full name"
+                    autoComplete="name"
+                    required
+                  />
+                </div>
+
+                <label htmlFor="astronautId">Astronaut ID</label>
+
+                <div className="login-input">
+                  <Rocket size={17} />
+                  <input
+                    id="astronautId"
+                    name="astronautId"
+                    value={form.astronautId}
+                    onChange={update}
+                    placeholder="AST-1001"
+                    required
+                  />
+                </div>
+
+                <label htmlFor="mission">Mission</label>
+
+                <select
+                  id="mission"
+                  name="mission"
+                  value={form.mission}
+                  onChange={update}
+                  className="login-select"
+                >
+                  <option value="ISS">ISS</option>
+                  <option value="Artemis">Artemis</option>
+                  <option value="Deep Space">Deep Space</option>
+                </select>
+              </>
+            )}
+
+            <label htmlFor="email">Email Address</label>
+
+            <div className="login-input">
+              <Mail size={17} />
+
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={update}
+                placeholder="astronaut@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+
+            <label htmlFor="password">Password</label>
+
+            <div className="login-input">
+              <Lock size={17} />
+
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={update}
+                placeholder="Enter password"
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                minLength={6}
+                required
+              />
+
+              <button
+                type="button"
+                className="password-toggle"
+                aria-label={
+                  showPassword ? "Hide password" : "Show password"
+                }
+                onClick={() => setShowPassword((value) => !value)}
+              >
+                {showPassword
+                  ? <EyeOff size={16} />
+                  : <Eye size={16} />}
+              </button>
+            </div>
+
+            {error && (
+              <div className="login-error">
+                {error}
+              </div>
+            )}
+
+            <button
+              className="primary-button login-submit"
+              type="submit"
+              disabled={loading}
+            >
+              {loading
+                ? "Please wait..."
+                : mode === "login"
+                ? "Login to Mission"
+                : "Register Astronaut"}
+            </button>
+
+          </form>
+
+          <div className="login-switch">
+
+            {mode === "login"
+              ? "New astronaut? "
+              : "Already registered? "}
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode(
+                  mode === "login" ? "register" : "login"
+                );
+                setError("");
+              }}
+            >
+              {mode === "login"
+                ? "Register here"
+                : "Login here"}
+            </button>
+
+          </div>
+
+          <p className="login-footer">
+            SPACECARE AI · Secure Mission Access
+          </p>
 
         </div>
-
-        <p className="login-footer">
-          SPACECARE AI · Secure Mission Access
-        </p>
 
       </div>
 

@@ -30,8 +30,8 @@ import {
   Activity,
   Moon,
   Footprints,
-  LogOut,
-  AlertCircle
+  AlertCircle,
+  Smile
 } from "lucide-react";
 
 import "./App.css";
@@ -71,7 +71,7 @@ function Dashboard({ setActivePage, astronaut }) {
 
       <section className="mission-overview">
 
-        <div className="overview-item">
+        <div className="overview-item accent-blue">
           <Activity size={22} />
           <div>
             <span>MISSION</span>
@@ -79,7 +79,7 @@ function Dashboard({ setActivePage, astronaut }) {
           </div>
         </div>
 
-        <div className="overview-item">
+        <div className="overview-item accent-indigo">
           <Footprints size={22} />
           <div>
             <span>ASTRONAUT ID</span>
@@ -87,7 +87,7 @@ function Dashboard({ setActivePage, astronaut }) {
           </div>
         </div>
 
-        <div className="overview-item">
+        <div className="overview-item accent-teal">
           <Moon size={22} />
           <div>
             <span>MISSION DAY</span>
@@ -136,21 +136,46 @@ function Dashboard({ setActivePage, astronaut }) {
 
           <div className="wellness-item">
             <div className="wellness-icon sleep">
-              <Moon size={21} />
+              <Moon size={20} />
             </div>
             <div className="wellness-details">
-              <span>Sleep</span>
-              <strong>7.5 Hours</strong>
+              <div className="wellness-label">
+                <span>Sleep</span>
+                <strong>7.5 <small>hours</small></strong>
+              </div>
+              <div className="wellness-bar sleep">
+                <span style={{ width: "78%" }}></span>
+              </div>
             </div>
           </div>
 
           <div className="wellness-item">
             <div className="wellness-icon exercise">
-              <Footprints size={21} />
+              <Footprints size={20} />
             </div>
             <div className="wellness-details">
-              <span>Physical Activity</span>
-              <strong>74 Minutes</strong>
+              <div className="wellness-label">
+                <span>Physical Activity</span>
+                <strong>74 <small>minutes</small></strong>
+              </div>
+              <div className="wellness-bar exercise">
+                <span style={{ width: "62%" }}></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="wellness-item">
+            <div className="wellness-icon mood">
+              <Smile size={20} />
+            </div>
+            <div className="wellness-details">
+              <div className="wellness-label">
+                <span>Stress Level</span>
+                <strong>Low</strong>
+              </div>
+              <div className="wellness-bar mood">
+                <span style={{ width: "28%" }}></span>
+              </div>
             </div>
           </div>
 
@@ -182,7 +207,10 @@ function Dashboard({ setActivePage, astronaut }) {
               <AlertCircle size={18} />
             </div>
             <div className="alert-content">
-              <strong>{alert.title}</strong>
+              <div className="alert-title-row">
+                <strong>{alert.title}</strong>
+                <span className="alert-time">{alert.time}</span>
+              </div>
               <p>{alert.description}</p>
             </div>
           </div>
@@ -203,9 +231,18 @@ export default function App() {
   const [astronaut, setAstronaut] = useState(null);
 
   const [activePage, setActivePage] = useState("Dashboard");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
 
@@ -304,6 +341,11 @@ if (!profile || !profile.exists()) {
 
   };
 
+  const navigate = (page) => {
+    setActivePage(page);
+    setMobileOpen(false);
+  };
+
   if (loading) {
 
     return (
@@ -352,36 +394,36 @@ if (!profile || !profile.exists()) {
 
     <div className="app-layout">
 
-      <Sidebar
-        activePage={activePage}
-        setActivePage={setActivePage}
-      />
+      <div className={`sidebar-wrapper ${mobileOpen ? "open" : ""}`}>
+        <Sidebar
+          activePage={activePage}
+          setActivePage={navigate}
+        />
+      </div>
+
+      {mobileOpen && (
+        <button
+          className="mobile-overlay"
+          aria-label="Close navigation"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
       <main className="main-content">
 
         <Header
           astronaut={astronaut}
+          activePage={activePage}
+          setMobileOpen={setMobileOpen}
+          onLogout={logout}
         />
 
         <div className="page-content">
 
-          <div className="logged-in-bar">
-
-            <span>
-              Logged in as {astronaut.astronautId}
-            </span>
-
-            <button onClick={logout}>
-              <LogOut size={15} />
-              Logout
-            </button>
-
-          </div>
-
           {activePage === "Dashboard" && (
 
             <Dashboard
-              setActivePage={setActivePage}
+              setActivePage={navigate}
               astronaut={astronaut}
             />
 
@@ -412,7 +454,7 @@ if (!profile || !profile.exists()) {
                 <p>This module will be developed in the next stages.</p>
                 <button
                   className="primary-button"
-                  onClick={() => setActivePage("Dashboard")}
+                  onClick={() => navigate("Dashboard")}
                 >
                   Back to Dashboard
                 </button>
