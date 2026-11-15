@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/astronauts/$(request.auth.uid))
+          .data.get('role', 'astronaut') == 'admin';
+    }
+
+    match /astronauts/{uid} {
+      // Astronauts can read their own profile. Admins can read all
+      // profiles so Mission Control can aggregate mission-wide data.
+      allow read: if signedIn() &&
+        (request.auth.uid == uid || isAdmin());
+
+      // New profiles are always created as astronauts. Role escalation
+      // is only possible through an existing admin or the Firebase console.
+      allow create: if signedIn() &&
+        request.auth.uid == uid &&
+        request.resource.data.get('role', 'astronaut') == 'astronaut';
+
+      allow update: if signedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == uid &&
+          request.resource.data.get('role', 'astronaut') ==
+            resource.data.get('role', 'astronaut')
+        )
+      );
+
+      allow delete: if isAdmin();
+
+      match /assessments/{assessmentId} {
+        allow read: if signedIn() &&
+          (request.auth.uid == uid || isAdmin());
+
+        allow create, update: if signedIn() &&
+          (request.auth.uid == uid || isAdmin());
+
+        allow delete: if signedIn() &&
+          (request.auth.uid == uid || isAdmin());
+      }
+
+      match /emergencyAlerts/{alertId} {
+        allow read: if signedIn() &&
+          (request.auth.uid == uid || isAdmin());
+
+        allow create, update: if signedIn() &&
+          (request.auth.uid == uid || isAdmin());
+
+        allow delete: if isAdmin();
+      }
+    }
+  }
+}

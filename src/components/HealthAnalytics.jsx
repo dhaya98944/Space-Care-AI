@@ -21,7 +21,8 @@ import {
   AreaChart,
   Area,
   BarChart,
-  Bar
+  Bar,
+  Cell
 } from "recharts";
 
 import {
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 
 import { db } from "../firebase/firebase";
+import { getUrineInsight, urineScoreColor } from "../utils/hydration";
 
 function MetricCard({ title, value, unit, icon: Icon, description }) {
   return (
@@ -200,7 +202,11 @@ export default function HealthAnalytics({ user }) {
         temperature: m.temperature ?? null,
         sleep: m.sleepHours ?? null,
         exercise: m.exerciseMinutes ?? null,
-        weight: m.weight ?? null
+        weight: m.weight ?? null,
+        urineScore: Number.isFinite(record.urine?.colorScore)
+          ? record.urine.colorScore
+          : null,
+        urineLabel: record.urine?.label || null
       };
     });
   }, [records]);
@@ -210,6 +216,7 @@ export default function HealthAnalytics({ user }) {
     : null;
 
   const latestMeasurements = latest?.measurements || {};
+  const latestUrine = getUrineInsight(latest?.urine);
 
   const formatValue = (value) =>
     value === null || value === undefined
@@ -364,6 +371,16 @@ export default function HealthAnalytics({ user }) {
           unit="kg"
           icon={Activity}
           description="Latest recorded measurement"
+        />
+
+        <MetricCard
+          title="Urine Colour"
+          value={latestUrine?.label || "—"}
+          unit={latestUrine ? `${latestUrine.score}/8` : ""}
+          icon={Droplets}
+          description={
+            latestUrine ? latestUrine.estimate : "Hydration indicator"
+          }
         />
       </div>
 
@@ -558,6 +575,46 @@ export default function HealthAnalytics({ user }) {
           )}
         </ChartPanel>
 
+        <ChartPanel
+          title="Hydration Indicator"
+          subtitle={`${validCount("urineScore")} urine colour records · Score 1–8`}
+        >
+          {hasData("urineScore") ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                <YAxis
+                  domain={[0, 8]}
+                  ticks={[1, 3, 5, 7, 8]}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip
+                  formatter={(value, name, props) => [
+                    `${props?.payload?.urineLabel || "Urine colour"} · ${value}/8`,
+                    "Hydration score"
+                  ]}
+                />
+
+                <Bar
+                  dataKey="urineScore"
+                  name="Urine colour score"
+                  radius={[5, 5, 0, 0]}
+                >
+                  {chartData.map((item, index) => (
+                    <Cell
+                      key={`urine-${index}`}
+                      fill={urineScoreColor(item.urineScore)}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="chart-no-data">No urine colour records.</p>
+          )}
+        </ChartPanel>
+
       </div>
 
       <div className="analytics-section-title">
@@ -602,8 +659,9 @@ export default function HealthAnalytics({ user }) {
 
         <p>
           Analytics are descriptive and based on submitted measurements.
-          Changes are not diagnoses. Missing values are excluded from
-          individual calculations. Clinical interpretation, alerts and
+          Changes are not diagnoses. Urine colour is a general hydration
+          indicator, not a clinical measurement. Missing values are excluded
+          from individual calculations. Clinical interpretation, alerts and
           treatment decisions must follow approved mission medical protocols.
         </p>
       </div>

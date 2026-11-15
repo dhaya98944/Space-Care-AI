@@ -4,6 +4,11 @@ import {
 } from "../utils/emergencyEngine";
 
 import {
+  URINE_COLOR_OPTIONS,
+  hydrationStatusForScore
+} from "../utils/hydration";
+
+import {
   addDoc,
   collection,
   serverTimestamp
@@ -75,88 +80,8 @@ const symptomOptions = [
 
 /*
  * Urine colour chart (1 = very dilute, 8 = highly concentrated).
- * Used as a general wellness hydration indicator, not a diagnosis.
+ * Shared with analytics, AI review and recommendations.
  */
-const urineColorOptions = [
-  {
-    value: "clear",
-    label: "Clear",
-    hint: "Very hydrated",
-    hex: "#f2fafd",
-    score: 1,
-    estimate: "Well hydrated",
-    severity: "good"
-  },
-  {
-    value: "pale-straw",
-    label: "Pale straw",
-    hint: "Hydrated",
-    hex: "#f7f1cc",
-    score: 2,
-    estimate: "Well hydrated",
-    severity: "good"
-  },
-  {
-    value: "straw",
-    label: "Straw",
-    hint: "Hydrated",
-    hex: "#f2e6a4",
-    score: 3,
-    estimate: "Well hydrated",
-    severity: "good"
-  },
-  {
-    value: "light-yellow",
-    label: "Light yellow",
-    hint: "Adequate",
-    hex: "#ecd878",
-    score: 4,
-    estimate: "Adequate hydration",
-    severity: "good"
-  },
-  {
-    value: "yellow",
-    label: "Yellow",
-    hint: "Drink water",
-    hex: "#e2c247",
-    score: 5,
-    estimate: "Mild dehydration",
-    severity: "caution"
-  },
-  {
-    value: "dark-yellow",
-    label: "Dark yellow",
-    hint: "Dehydration",
-    hex: "#caa02b",
-    score: 6,
-    estimate: "Mild dehydration",
-    severity: "caution"
-  },
-  {
-    value: "amber",
-    label: "Amber",
-    hint: "High concentration",
-    hex: "#b47a19",
-    score: 7,
-    estimate: "Dehydration",
-    severity: "warning"
-  },
-  {
-    value: "brown",
-    label: "Brown",
-    hint: "Severe",
-    hex: "#8a5a14",
-    score: 8,
-    estimate: "Dehydration",
-    severity: "warning"
-  }
-];
-
-const hydrationStatusForScore = (score) => {
-  if (score <= 4) return "Adequate";
-  if (score <= 6) return "Reduced Intake";
-  return "Possible Dehydration";
-};
 
 function FormSection({ icon: Icon, title, description, children }) {
   return (
@@ -207,7 +132,7 @@ export default function HealthAssessment({ user, astronaut }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const selectedUrineColor = urineColorOptions.find(
+  const selectedUrineColor = URINE_COLOR_OPTIONS.find(
     (option) => option.value === form.urineColor
   );
 
@@ -445,6 +370,7 @@ export default function HealthAssessment({ user, astronaut }) {
             measurements,
             psychological: assessment.psychological,
             nutrition: assessment.nutrition,
+            urine: assessment.urine,
             symptoms: assessment.symptoms
           }
         );
@@ -856,7 +782,7 @@ export default function HealthAssessment({ user, astronaut }) {
               aria-label="Urine color"
             >
 
-              {urineColorOptions.map((option) => {
+              {URINE_COLOR_OPTIONS.map((option) => {
 
                 const selected = form.urineColor === option.value;
 

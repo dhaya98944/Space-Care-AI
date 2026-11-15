@@ -7,6 +7,7 @@ import {
   HeartPulse,
   Orbit,
   Siren,
+  Radar,
 } from "lucide-react";
 
 const menuItems = [
@@ -21,7 +22,7 @@ const menuItems = [
   
 ];
 
-export default function Sidebar({ activePage, setActivePage }) {
+export default function Sidebar({ activePage, setActivePage, isAdmin }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -53,6 +54,24 @@ export default function Sidebar({ activePage, setActivePage }) {
             </button>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="menu-heading admin-heading">
+              ADMINISTRATION
+            </div>
+
+            <button
+              className={`nav-item admin-nav ${
+                activePage === "Mission Control" ? "active" : ""
+              }`}
+              onClick={() => setActivePage("Mission Control")}
+            >
+              <Radar size={19} />
+              <span>Mission Control</span>
+            </button>
+          </>
+        )}
       </nav>
 
       <div className="sidebar-bottom">

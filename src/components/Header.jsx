@@ -13,6 +13,10 @@ const pageMeta = {
     title: "Health Records",
     subtitle: "Review your previous mission health assessments",
   },
+  "Mission Control": {
+    title: "Mission Control",
+    subtitle: "Admin command for mission-wide reports and astronaut status",
+  },
 };
 
 export default function Header({

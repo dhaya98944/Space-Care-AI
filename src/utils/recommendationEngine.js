@@ -1,4 +1,6 @@
 
+import { getUrineInsight } from "./hydration";
+
 const createRecommendation = (
   category,
   title,
@@ -175,8 +177,38 @@ export function generateRecommendations(records) {
     ));
   }
 
-  // 8. Hydration
+  // 8. Hydration — urine colour is treated as an assessment factor,
+  // not just a stored observation.
+  const urineInsight = getUrineInsight(latest.urine);
+
+  let hydrationRecommendationAdded = false;
+
+  if (urineInsight && urineInsight.score >= 7) {
+    recommendations.push(createRecommendation(
+      "Hydration",
+      "Significant dehydration indicator",
+      "Prompt review",
+      `Urine colour is ${urineInsight.label} (${urineInsight.score}/8), suggesting ${urineInsight.estimate.toLowerCase()}.`,
+      "Begin controlled oral rehydration if safe to drink, review fluid balance and associated symptoms, and contact the mission medical officer.",
+      "Urine colour chart"
+    ));
+
+    hydrationRecommendationAdded = true;
+  } else if (urineInsight && urineInsight.score >= 5) {
+    recommendations.push(createRecommendation(
+      "Hydration",
+      "Hydration review",
+      "Review",
+      `Urine colour is ${urineInsight.label} (${urineInsight.score}/8), suggesting ${urineInsight.estimate.toLowerCase()}.`,
+      "Increase fluid intake across the duty cycle, reduce avoidable fluid losses and recheck urine colour at the next assessment.",
+      "Urine colour chart"
+    ));
+
+    hydrationRecommendationAdded = true;
+  }
+
   if (
+    !hydrationRecommendationAdded &&
     ["Reduced Intake", "Possible Dehydration"]
       .includes(nutrition.hydration)
   ) {
@@ -187,6 +219,17 @@ export function generateRecommendations(records) {
       `Reported hydration status: ${nutrition.hydration}.`,
       "Review fluid intake, fluid balance and associated symptoms with the mission medical team. Follow the approved hydration protocol.",
       "Hydration assessment"
+    ));
+  }
+
+  if (!urineInsight) {
+    recommendations.push(createRecommendation(
+      "Hydration",
+      "Record urine colour",
+      "Data review",
+      "No urine colour was recorded in the latest assessment, so hydration could not be estimated from urine concentration.",
+      "Capture urine colour at the next assessment to improve hydration tracking. Continue following the approved hydration schedule.",
+      "Urine colour chart"
     ));
   }
 

@@ -25,8 +25,11 @@ import {
   RefreshCw,
   ShieldCheck,
   Lightbulb,
-  ClipboardCheck
+  ClipboardCheck,
+  Droplets
 } from "lucide-react";
+
+import { getUrineInsight, HYDRATION_NOTE } from "../utils/hydration";
 
 const METRICS = [
   {
@@ -301,6 +304,79 @@ function analyzeSymptoms(records) {
   }));
 }
 
+function analyzeHydration(records) {
+  if (!records.length) return [];
+
+  const latest = records[records.length - 1];
+  const insight = getUrineInsight(latest.urine);
+  const reportedHydration = latest.nutrition?.hydration || "";
+  const findings = [];
+
+  if (!insight) {
+    findings.push({
+      title: "Urine colour not recorded",
+      explanation:
+        "The latest assessment does not include a urine colour reading, so hydration could not be estimated from urine concentration. Record it at the next assessment.",
+      priority: "Data review",
+      severity: "info"
+    });
+  } else if (insight.score >= 7) {
+    findings.push({
+      title: `High urine concentration (${insight.label})`,
+      explanation:
+        `Urine colour is ${insight.label} (${insight.score}/8), suggesting ${insight.estimate.toLowerCase()}. ` +
+        "Review recent fluid intake and mission activity, and escalate if symptoms are present.",
+      priority: "Prompt review",
+      severity: "warning"
+    });
+  } else if (insight.score >= 5) {
+    findings.push({
+      title: `Mild dehydration indicator (${insight.label})`,
+      explanation:
+        `Urine colour is ${insight.label} (${insight.score}/8), suggesting ${insight.estimate.toLowerCase()}. ` +
+        "Increase fluid intake and recheck urine colour at the next assessment.",
+      priority: "Review",
+      severity: "caution"
+    });
+  }
+
+  if (
+    reportedHydration &&
+    reportedHydration !== "Adequate"
+  ) {
+    findings.push({
+      title: `Self-reported hydration: ${reportedHydration}`,
+      explanation:
+        "The hydration status entered in the latest assessment is below adequate. Review fluid balance, recent activity and associated symptoms.",
+      priority: "Review",
+      severity: "caution"
+    });
+  }
+
+  const previousHighScores = records
+    .slice(0, -1)
+    .map((record) => Number(record.urine?.colorScore))
+    .filter(Number.isFinite)
+    .filter((score) => score >= 5);
+
+  if (
+    insight &&
+    insight.score >= 5 &&
+    previousHighScores.length >= 2
+  ) {
+    findings.push({
+      title: "Repeated dehydration indicators",
+      explanation:
+        `Urine concentration has also been elevated (score 5 or higher) in ${previousHighScores.length} earlier assessments. ` +
+        "Consider a structured hydration review with the mission medical team.",
+      priority: "Prompt review",
+      severity: "warning"
+    });
+  }
+
+  return findings;
+}
+
 function FindingCard({ finding }) {
   const flagged =
     finding.status === "Statistical outlier";
@@ -398,6 +474,7 @@ export default function AIHealthAssessment({ user }) {
 
     const psychological = analyzePsychological(records);
     const symptoms = analyzeSymptoms(records);
+    const hydration = analyzeHydration(records);
 
     const insufficient = findings.filter(
       (item) => item.status === "Insufficient baseline"
@@ -413,6 +490,7 @@ export default function AIHealthAssessment({ user }) {
       statisticalOutliers,
       psychological,
       symptoms,
+      hydration,
       insufficient,
       missing
     };
@@ -460,7 +538,8 @@ export default function AIHealthAssessment({ user }) {
   const reviewCount =
     results.statisticalOutliers.length +
     results.psychological.length +
-    results.symptoms.length;
+    results.symptoms.length +
+    results.hydration.length;
 
   return (
     <div className="ai-page">
@@ -522,6 +601,12 @@ export default function AIHealthAssessment({ user }) {
           <strong>{results.insufficient.length}</strong>
         </div>
 
+        <div className="ai-summary-card">
+          <Droplets size={23} />
+          <span>Hydration Flags</span>
+          <strong>{results.hydration.length}</strong>
+        </div>
+
       </div>
 
       <div className="ai-section-heading">
@@ -564,6 +649,38 @@ export default function AIHealthAssessment({ user }) {
           </div>
         ))
       )}
+
+      <div className="ai-section-heading">
+        <div>
+          <h3>Hydration and Urinary Observations</h3>
+          <p>
+            Urine colour and self-reported hydration status from the
+            latest assessment.
+          </p>
+        </div>
+      </div>
+
+      {results.hydration.length === 0 ? (
+        <div className="ai-empty-small">
+          Hydration indicators are within the configured wellness range.
+        </div>
+      ) : (
+        results.hydration.map((item, index) => (
+          <div
+            className={`ai-observation hydration-${item.severity}`}
+            key={index}
+          >
+            <Droplets size={20} />
+            <div>
+              <strong>{item.title}</strong>
+              <p>{item.explanation}</p>
+              <small>{item.priority}</small>
+            </div>
+          </div>
+        ))
+      )}
+
+      <p className="ai-hydration-note">{HYDRATION_NOTE}</p>
 
       <div className="ai-section-heading">
         <div>
@@ -632,6 +749,11 @@ export default function AIHealthAssessment({ user }) {
           <li>
             Mood, sleep and symptoms are reviewed separately
             from numerical anomaly detection.
+          </li>
+
+          <li>
+            Urine colour is converted to a 1–8 hydration score
+            and reviewed alongside self-reported hydration status.
           </li>
 
           <li>

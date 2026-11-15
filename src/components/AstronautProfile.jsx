@@ -19,8 +19,7 @@ import {
   Edit3,
   Loader2,
   CheckCircle2,
-  AlertCircle,
-  CalendarDays
+  AlertCircle
 } from "lucide-react";
 
 export default function AstronautProfile({ user }) {
@@ -42,8 +41,10 @@ export default function AstronautProfile({ user }) {
   useEffect(() => {
 
     if (!user || !db) {
-      setError("User authentication unavailable.");
-      setLoading(false);
+      Promise.resolve().then(() => {
+        setError("User authentication unavailable.");
+        setLoading(false);
+      });
       return;
     }
 

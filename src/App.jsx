@@ -24,6 +24,7 @@ import AIHealthAssessment from "./components/AIHealthAssessment";
 import HealthRecommendations from "./components/HealthRecommendations";
 import EmergencyAlerts from "./components/EmergencyAlerts";
 import AstronautProfile from "./components/AstronautProfile";
+import AdminDashboard from "./components/AdminDashboard";
 
 import {
   //astronaut,
@@ -395,6 +396,16 @@ if (!profile || !profile.exists()) {
     );
   }
 
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  const isAdmin =
+    astronaut.role === "admin" ||
+    astronaut.isAdmin === true ||
+    adminEmails.includes(String(astronaut.email || "").toLowerCase());
+
   return (
 
     <div className="app-layout">
@@ -403,6 +414,7 @@ if (!profile || !profile.exists()) {
         <Sidebar
           activePage={activePage}
           setActivePage={navigate}
+          isAdmin={isAdmin}
         />
       </div>
 
@@ -469,6 +481,14 @@ if (!profile || !profile.exists()) {
   <AstronautProfile user={user} />
 )}
 
+{activePage === "Mission Control" && (
+  <AdminDashboard
+    user={user}
+    astronaut={astronaut}
+    isAdmin={isAdmin}
+  />
+)}
+
 
           {activePage !== "Dashboard" &&
             activePage !== "Health Assessment" &&
@@ -477,6 +497,8 @@ if (!profile || !profile.exists()) {
             activePage !== "AI Health Assessment" &&
             activePage !== "Health Recommendations" &&
             activePage !== "Emergency Alerts" &&
+            activePage !== "Astronaut Profile" &&
+            activePage !== "Mission Control" &&
              (
 
               <div className="placeholder-page">

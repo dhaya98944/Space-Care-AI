@@ -333,7 +333,11 @@ export default function EmergencyAlerts({ user }) {
                 <h3>{alert.title}</h3>
               </div>
 
-              <span className="emergency-critical-tag">
+              <span
+                className={`emergency-critical-tag ${String(
+                  alert.severity || ""
+                ).toLowerCase()}`}
+              >
                 {alert.severity}
               </span>
 

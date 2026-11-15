@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../firebase/firebase";
+import { getUrineInsight, HYDRATION_NOTE } from "./hydration";
 
 // Initial demonstration thresholds.
 // Obtain mission medical approval before operational use.
@@ -14,6 +15,8 @@ import { db } from "../firebase/firebase";
 export function detectEmergencyConditions(assessment) {
   const measurements = assessment?.measurements || {};
   const symptoms = assessment?.symptoms || [];
+  const hydration = assessment?.nutrition?.hydration || "";
+  const urine = getUrineInsight(assessment?.urine);
 
   const alerts = [];
 
@@ -66,6 +69,34 @@ export function detectEmergencyConditions(assessment) {
         `Recorded blood pressure is ${measurements.systolicBP}/${measurements.diastolicBP} mmHg.`,
       recommendedAction:
         "Follow the mission medical emergency protocol and obtain immediate medical officer assessment."
+    });
+  }
+
+  // Hydration / urine concentration
+  if (urine && urine.score >= 7) {
+    alerts.push({
+      code: "severe-dehydration",
+      title: "Severe Dehydration Indicator",
+      category: "Hydration Warning",
+      severity: urine.score >= 8 ? "CRITICAL" : "WARNING",
+      message:
+        `Urine colour is recorded as ${urine.label} (${urine.score}/8), indicating significant concentration. ${HYDRATION_NOTE}`,
+      recommendedAction:
+        "Begin controlled oral rehydration if the astronaut can drink safely, review fluid balance and associated symptoms, and contact the mission medical officer."
+    });
+  } else if (
+    !urine &&
+    hydration === "Possible Dehydration"
+  ) {
+    alerts.push({
+      code: "reported-dehydration",
+      title: "Dehydration Reported",
+      category: "Hydration Warning",
+      severity: "WARNING",
+      message:
+        "The astronaut reported possible dehydration in the latest assessment.",
+      recommendedAction:
+        "Review recent fluid intake and mission activity, encourage controlled rehydration, and recheck hydration status."
     });
   }
 
