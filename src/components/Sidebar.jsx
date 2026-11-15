@@ -5,9 +5,8 @@ import {
   Activity,
   BrainCircuit,
   HeartPulse,
-  Bell,
-  Database,
   Orbit,
+  Siren,
 } from "lucide-react";
 
 const menuItems = [
@@ -16,9 +15,10 @@ const menuItems = [
   { name: "Health Assessment", icon: ClipboardList },
   { name: "Health Analytics", icon: Activity },
   { name: "AI Health Assessment", icon: BrainCircuit },
-  { name: "Recommendations", icon: HeartPulse },
-  { name: "Emergency Alerts", icon: Bell },
-  { name: "Health History", icon: Database },
+  { name: "Health Recommendations", icon: HeartPulse },
+  { name: "Emergency Alerts", icon: Siren },
+  
+  
 ];
 
 export default function Sidebar({ activePage, setActivePage }) {

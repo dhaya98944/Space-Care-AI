@@ -19,6 +19,11 @@ import HealthChart from "./components/HealthChart";
 import Login from "./components/Login";
 import HealthAssessment from "./components/HealthAssessment";
 import HealthHistory from "./components/HealthHistory";
+import HealthAnalytics from "./components/HealthAnalytics";
+import AIHealthAssessment from "./components/AIHealthAssessment";
+import HealthRecommendations from "./components/HealthRecommendations";
+import EmergencyAlerts from "./components/EmergencyAlerts";
+import AstronautProfile from "./components/AstronautProfile";
 
 import {
   //astronaut,
@@ -444,9 +449,35 @@ if (!profile || !profile.exists()) {
 
           )}
 
+          {activePage === "Health Analytics" && (
+  <HealthAnalytics user={user} />
+)}
+
+{activePage === "AI Health Assessment" && (
+  <AIHealthAssessment user={user} />
+)}
+
+{activePage === "Health Recommendations" && (
+  <HealthRecommendations user={user} />
+)}
+
+{activePage === "Emergency Alerts" && (
+  <EmergencyAlerts user={user} />
+)}
+
+{activePage === "Astronaut Profile" && (
+  <AstronautProfile user={user} />
+)}
+
+
           {activePage !== "Dashboard" &&
             activePage !== "Health Assessment" &&
-            activePage !== "Health History" && (
+            activePage !== "Health History" &&
+            activePage !== "Health Analytics" &&
+            activePage !== "AI Health Assessment" &&
+            activePage !== "Health Recommendations" &&
+            activePage !== "Emergency Alerts" &&
+             (
 
               <div className="placeholder-page">
                 <Activity size={40} />

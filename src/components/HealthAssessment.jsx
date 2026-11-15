@@ -1,4 +1,7 @@
 import { useState } from "react";
+import {
+  createEmergencyAlertsForAssessment
+} from "../utils/emergencyEngine";
 
 import {
   addDoc,
@@ -424,7 +427,7 @@ export default function HealthAssessment({ user, astronaut }) {
 
       };
 
-      await addDoc(
+      const assessmentRef = await addDoc(
         collection(
           db,
           "astronauts",
@@ -433,6 +436,25 @@ export default function HealthAssessment({ user, astronaut }) {
         ),
         assessment
       );
+
+      const emergencyAlerts =
+        await createEmergencyAlertsForAssessment(
+          user.uid,
+          assessmentRef.id,
+          {
+            measurements,
+            psychological: assessment.psychological,
+            nutrition: assessment.nutrition,
+            symptoms: assessment.symptoms
+          }
+        );
+
+      if (emergencyAlerts.length > 0) {
+        console.warn(
+          "Emergency conditions detected:",
+          emergencyAlerts
+        );
+      }
 
       setMessage(
         "Health assessment successfully saved to Firebase!"
